@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="css/style.css">
+		<title>Генератор таблиц для разметки отчёта</title>
+
+		<!--jQuery UI-->
+		<link rel="stylesheet" href="jquery-ui-1.13.2/jquery-ui.min.css">
+		<script src="jquery-ui-1.13.2/external/jquery/jquery.js"></script>
+		<script src="jquery-ui-1.13.2/jquery-ui.min.js"></script>
+	</head>
+
+	<body>
+		<div id='controls'>
+			<div class='align-controls'>
+				<button class='align-control' id='align-left'><span class='ui-icon ui-icon-arrowthick-1-w'></button>
+				<button class='align-control' id='align-center'><span class='ui-icon ui-icon-arrowthick-2-e-w'></button>
+				<button class='align-control' id='align-right'><span class='ui-icon  ui-icon-arrowthick-1-e'></button>
+			</div>
+
+			<div class='delete-controls'>
+				<button class='delete-control' id='delete-column'><span class='ui-icon 	ui-icon-caret-2-n-s'></button>
+				<button class='delete-control' id='delete-row'><span class='ui-icon ui-icon-caret-2-e-w'></button>
+			</div>
+
+			<div class='insert-controls'>
+				<button class='insert-control' id='insert-col-left'><span class='ui-icon  ui-icon-arrowthickstop-1-w '></button>
+				<button class='insert-control' id='insert-col-right'><span class='ui-icon  ui-icon-arrowthickstop-1-e '></button>
+				<button class='insert-control' id='insert-row-top'><span class='ui-icon  ui-icon-arrowthickstop-1-n '></button>
+				<button class='insert-control' id='insert-row-bottom'><span class='ui-icon ui-icon-arrowthickstop-1-s'></button>
+			</div>
+
+			<div class='edit-controls'>
+				<input class='edit-control' id='edit-cell-content'>
+				<button class='edit-control' id='edit-apply'><span class='ui-icon ui-icon-check'></button>
+			</div>
+		</div>
+
+		<div class='page-container'>
+			<div class='page'>
+				<table id="editable-table">
+					<tr>
+						<td></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<div id='footer'>
+			<h1>Установить название таблицы</h1>
+			<div class='edit-controls'>
+				<input id="table-title">
+				<button id="set-table-name">Применить</button>
+			</div>
+			<h1>Итоговая разметка <a id="link-copy" href="javascript:copyMarkup()">копировать</a> </h1>
+			<pre id="markup"></pre>
+		</div>
+
+		<script src="js/main.js"></script>
+	</body>
+</html>
