@@ -312,17 +312,21 @@ $(function() {
 	});
 
 	$("#delete-column").mouseenter(function () {
+		if (selected_cell == null) return;
 		paintColumn(selected_x, "#FFABA5");
 	});
 	$("#delete-column").mouseleave(function () {
+		if (selected_cell == null) return;
 		paintColumn(selected_x, "");
 	});
 
 	$("#delete-row").mouseenter(function () {
+		if (selected_cell == null) return;
 		paintRow(selected_y, "#FFABA5")
 	});
 
 	$("#delete-row").mouseleave(function () {
+		if (selected_cell == null) return;
 		paintRow(selected_y, "");
 	});
 });
