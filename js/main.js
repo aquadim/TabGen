@@ -213,6 +213,7 @@ $(function() {
 		moveValueToCell(selected_cell);
 		if (selected_cell != null) {
 			selected_cell.css("box-shadow", "none");
+			$("#edit-cell-content").val("");
 		}
 		selected_cell = null;
 		selected_x = null;
