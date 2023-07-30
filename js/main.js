@@ -1,146 +1,34 @@
-// DOM элементы
-let table = document.getElementById("editable-table");
-let markup_pre = document.getElementById("markup"); // Место, где отображается разметка
-let input_title = document.getElementById("table-title"); // Кнопка 'Применить' название таблицы
-let selected_column = $("td:nth-child(0)"); // Колонка таблицы, по которой кликнули
-let input_cell_content = $("#edit-cell-content"); // Поле ввода содержимого яйчейки
+// Проверяет должны ли кнопки удаления быть отключенными
+function checkDisabled() {
+	if ($("#editable-table tr").length > 2 && selected_cell != null) {
+		// Удаление строк разрешено
+		$("#delete-row").prop("disabled", false);
+	} else {
+		// Удаление строк запрещено
+		$("#delete-row").prop("disabled", true);
+	}
 
-let selected_cell = null; // Выбранная яйчейка
+	if ($("#editable-table tr:first-child td").length > 2 && selected_cell != null) {
+		// Удаление столбцов разрешено
+		$("#delete-column").prop("disabled", false);
+	} else {
+		// Удаление столбцов запрещено
+		$("#delete-column").prop("disabled", true);
+	}
+}
 
-input_title.value = "Таблица";
+// Возвращает массив координат для яйчейки
+function getCellCoordinates(cell) {
+	let x = cell.index();
+	let y = cell.parent().index();
+	return {x, y};
+}
 
-let markup_head = getMarkupHead();
-let markup_body = getMarkupBody();
-markup_pre.innerHTML = markup_head + markup_body;
-
-$(function() {
-	reloadCells();
-
-	// Когда нажимаем на кнопку 'Применить', обновляем разметку
-	$("#set-table-name").click(function() {
-		markup_head = getMarkupHead();
-		markup_pre.innerHTML = markup_head + markup_body;
-	});
-
-	$("#edit-apply").click(function() {
-		if (selected_cell == null) return;
-		moveValueToCell();
-	});
-
-	// Если мы кликаем в другое место документа, сохраняем содержимое яйчейки
-	$(document).click(function(){
-		if (selected_cell == null) return;
-		moveValueToCell();
-	});
-
-	// Если нажимаем ctrl+enter, сохраняем содержимое яйчейки
-	$(document).keypress(function(event) {
-		if (event.keyCode == 13 && selected_cell != null) moveValueToCell();
-	});
-
-	// Управление выравниваем текста
-	$("#align-left").click(function() {setColumnAlignment("left")});
-	$("#align-center").click(function() {setColumnAlignment("center")});
-	$("#align-right").click(function() {setColumnAlignment("right")});
-
-	// Удаление колонки
-	$("#delete-column").click(function() {
-		if (confirm("Точно удалить выделенную колонку?") == false) return;
-		selected_cell = null;
-		selected_column.remove();
-		input_cell_content.val("");
-		markup_head = getMarkupHead();
-		markup_body = getMarkupBody();
-		markup_pre.innerHTML = markup_head + markup_body;
-	});
-
-	// Удаление строки
-	$("#delete-row").click(function() {
-		if (selected_cell == null) {return;}
-		if (confirm("Точно удалить выделенную строку?") == false) return;
-		selected_cell.parent().remove();
-		selected_cell = null;
-		input_cell_content.val("");
-		markup_head = getMarkupHead();
-		markup_body = getMarkupBody();
-		markup_pre.innerHTML = markup_head + markup_body;
-	});
-
-	// Добавление строки сверху
-	$("#insert-row-top").click(function() {
-		if (selected_cell == null) return;
-		// Находим индекс родителя выбранной яйчейки
-		let index = selected_cell.parent().index();
-		let col_count = table.rows[0].cells.length;
-		// Добавляем
-		$("#editable-table").find("tr").eq(index).before("<tr>" + "<td></td>".repeat(col_count) + "</tr>");
-
-        reloadCells();
-		markup_body = getMarkupBody();
-		markup_pre.innerHTML = markup_head + markup_body;
-	});
-
-	// Добавление строки снизу
-	$("#insert-row-bottom").click(function() {
-		if (selected_cell == null) return;
-		// Находим индекс родителя выбранной яйчейки
-		let index = selected_cell.parent().index();
-		let col_count = table.rows[0].cells.length;
-		// Добавляем
-		$("#editable-table").find("tr").eq(index).after("<tr>" + "<td></td>".repeat(col_count) + "</tr>");
-
-        reloadCells();
-		markup_body = getMarkupBody();
-		markup_pre.innerHTML = markup_head + markup_body;
-	});
-
-	// Добавление столбца справа
-	$("#insert-col-right").click(function() {
-		if (selected_cell == null) return;
-
-		// https://stackoverflow.com/questions/20239062/add-column-to-table-with-jquery
-		$("#editable-table").find("tr").each(function(){
-			$(this).find("td").eq(selected_cell.index()).after("<td></td>");
-        });
-
-        reloadCells();
-   		markup_head = getMarkupHead();
-		markup_body = getMarkupBody();
-		markup_pre.innerHTML = markup_head + markup_body;
-	});
-
-	// Добавление столбца слева
-	$("#insert-col-left").click(function() {
-		if (selected_cell == null) return;
-		let selected_index = selected_cell.index();
-
-		$("#editable-table").find("tr").each(function() {
-			$(this).find("td").eq(selected_index).before("<td></td>");
-        });
-
-        reloadCells();
-   		markup_head = getMarkupHead();
-		markup_body = getMarkupBody();
-		markup_pre.innerHTML = markup_head + markup_body;
-	});
-
-	// Подсвечиваем колонку, к которой будет применён эффект
-	$(".align-control").mouseenter(function () {selected_column.css("background-color", "#C1B2FF");});
-	$(".align-control").mouseleave(function () {selected_column.css("background-color", "");});
-
-	$("#delete-column").mouseenter(function () {selected_column.css("background-color", "#FFABA5");});
-	$("#delete-column").mouseleave(function () {selected_column.css("background-color", "");});
-
-	$("#delete-row").mouseenter(function () {
-		if (selected_cell === null) return;
-		selected_cell.parent().css("background-color", "#FFABA5");
-	});
-
-	$("#delete-row").mouseleave(function () {
-		if (selected_cell === null) return;
-		selected_cell.parent().css("background-color", "");
-	});
-});
+// Передаёт фокус полю ввода на основании данных выбранной яйчейки
+function focusInput(cell) {
+	$("#edit-cell-content").val(cell.text()).focus();
+	cell.css("box-shadow", "0px 0px 4px 4px #9E9E9E inset");
+}
 
 // Добавляет функционал яйчейкам таблицы
 function reloadCells() {
@@ -148,56 +36,300 @@ function reloadCells() {
 	$("td").resizable({
 		handles: "e",
 		resize: function() {
-			markup_head = getMarkupHead();
-			markup_pre.innerHTML = markup_head + markup_body;
+			updateMarkup(true, false);
 		}
 	});
 
-	// Когда нажимаем на яйчейку, 'выбираем' её, так же выбираем и всю колонку
-	$("td").click(function() {
-		// Присваиваем предыдущей яйчейке текст
+	// Когда нажимаем на яйчейку, 'выбираем' её
+	$("td").click(function(e) {
 		if (selected_cell != null) {
-			moveValueToCell();
 			selected_cell.css("box-shadow", "none");
+			moveValueToCell(selected_cell);
 		}
 
-		// Выбираем
 		selected_cell = $(this);
-		let index = selected_cell.index() + 1;
-		selected_column = $("td:nth-child(" + index + ")");
+		let {x, y} = getCellCoordinates(selected_cell);
+		selected_x = x;
+		selected_y = y;
 
-		// Активируем поле ввода
-		input_cell_content.val(selected_cell.text());
-		input_cell_content.focus();
-
-		selected_cell.css("box-shadow", "0px 0px 4px 4px #9E9E9E inset");
+		focusInput(selected_cell);
+		checkDisabled();
+		e.stopPropagation();
 	});
 }
 
-// Передаёт значение из поля ввода в яйчейку
-// А так же обновляет разметку
-function moveValueToCell() {
-	if (selected_cell.contents().length == 1) {
+// Вызывается когда таблица изменяется (количество строк или столбцов меняется)
+function onTableUpdate(changedRows) {
+	checkDisabled(); // Проверяем должны ли кнопки удаления быть отключены
+	reloadCells(); // Перезагружает функционал яйчеек
+
+	// Если changedRows = true, то добавили/удалили строки, обновлять надо тело разметки
+	// Иначе добавили/удалили колонки, обновляет как тело так и голову
+	updateMarkup(!changedRows, true);
+}
+
+// Обновляет разметку
+function updateMarkup(update_head, update_body) {
+	// updateHead - нужно ли обновлять голову разметки
+	// updateBody - нужно ли обновлять тело разметки
+	if (update_head) markup_head = getMarkupHead();
+	if (update_body) markup_body = getMarkupBody();
+	$("#markup").html(markup_head + markup_body);
+}
+
+// Передаёт значение из поля ввода в яйчейку, а так же обновляет разметку
+function moveValueToCell(cell) {
+	if (cell == null) return;
+	let text = $("#edit-cell-content").val();
+	if (cell.contents().length == 1) {
 		// У этой яйчейки не было текста, добавляем
-		selected_cell.append(input_cell_content.val());
+		cell.append(text);
 	} else {
 		// У этой яйчейки был текст, заменяем
-		selected_cell.contents().filter(function(){return this.nodeType==3;}).first().replaceWith(input_cell_content.val());
+		cell.contents().filter(function() {return this.nodeType==3;}).first().replaceWith(text);
 	}
-	markup_body = getMarkupBody();
-	markup_pre.innerHTML = markup_head + markup_body;
+	updateMarkup(false, true);
+}
+
+// Копирует разметку
+function copyMarkup() {
+	navigator.clipboard.writeText($("#markup").text()).then(alert("Успешно скопировано"));
+}
+
+// Добавляет столбец слева или справа от определённой колонки
+function addColumn(index, direction) {
+	// Если direction = -1, добавляем слева, если 1, справа
+	$("#editable-table").find("tr").each(function() {
+		if (direction == -1) {
+			$(this).find("td").eq(index).before("<td></td>");
+		} else if (direction == 1) {
+			$(this).find("td").eq(index).after("<td></td>");
+		}
+    });
+    if (direction == -1) {
+		// Т.к. мы добавляем слева, нужно увеличить индекс выделенной яйчейки
+		selected_x++;
+	}
+    table_width++;
+    reloadCells();
+    checkDisabled();
+    updateMarkup(true, true);
+}
+
+// Удаляет столбец
+function removeColumn(x) {
+	$("#editable-table").find("tr").each(function() {
+		$(this).find("td").eq(x).remove();
+	});
+	table_width--;
+	checkDisabled();
+	updateMarkup(true, true);
+}
+
+// Добавляет строку слева или справа от определённой строки
+function addRow(index, direction) {
+	// Если direction = -1, добавляем вверх, если 1, вниз
+	if (direction == -1) {
+		$("#editable-table").find("tr").eq(index).before("<tr>" + "<td></td>".repeat(table_width) + "</tr>");
+	} else if (direction == 1) {
+		$("#editable-table").find("tr").eq(index).after("<tr>" + "<td></td>".repeat(table_width) + "</tr>");
+	}
+	if (direction == -1) {
+		// Т.к. мы добавляем сверху, нужно увеличить индекс выделенной яйчейки
+		selected_y++;
+	}
+    table_height++;
+    checkDisabled();
+    reloadCells();
+    updateMarkup(false, true);
+}
+
+// Удаляет строку
+function removeRow(y) {
+	selected_cell = null;
+	selected_x = null;
+	selected_y = null;
+	$("#editable-table").find("tr").eq(y).remove();
+	table_height--;
+	checkDisabled();
+	updateMarkup(false, true);
 }
 
 // Устанавливает стиль выравнивания текста колонке таблицы
-function setColumnAlignment(align) {
-	selected_column.css("text-align", align);
-	markup_head = getMarkupHead();
-	markup_pre.innerHTML = markup_head + markup_body;
+function setColumnAlignment(x, align_mode) {
+	$("#editable-table").find("tr").each(function() {
+		$(this).find("td").eq(x).css("text-align", align_mode);
+	});
+	updateMarkup(true, false);
 }
+
+// Устанавливает цвет фона колонке таблицы
+function paintColumn(x, color) {
+	$("#editable-table").find("tr").each(function() {
+		$(this).find("td").eq(x).css("background-color", color);
+	});
+}
+
+// Устанавливает цвет фона строке таблицы
+function paintRow(y, color) {
+	$("#editable-table").find("tr").eq(y).find("td").css("background-color", color);
+}
+
+// Данные выбранной яйчейки
+let selected_x = null;
+let selected_y = null;
+let selected_cell = null;
+
+// Данные таблицы
+let table_width = 2;
+let table_height = 2;
+
+let markup_head = null; // Голова разметки
+let markup_body = null; // Тело разметки
+
+// DOM элементы
+let table = document.getElementById("editable-table");
+let selected_column = $("td:nth-child(0)"); // Колонка таблицы, по которой кликнули
+let input_cell_content = $("#edit-cell-content"); // Поле ввода содержимого яйчейки
+
+$(function() {
+	checkDisabled();
+	reloadCells();
+	$("#table-title").val("Таблица");
+	updateMarkup(true, true);
+
+	// Установка названия таблицы
+	$("#set-table-name").click(function() {
+		updateMarkup(true, false);
+	});
+
+	// Установка значения в яйчейке
+	$("#edit-apply").click(function() {
+		moveValueToCell(selected_cell);
+	});
+
+	// Если мы кликаем в другое место документа, сохраняем содержимое яйчейки
+	$(".page-container").click(function() {
+		moveValueToCell(selected_cell);
+		if (selected_cell != null) {
+			selected_cell.css("box-shadow", "none");
+		}
+		selected_cell = null;
+		selected_x = null;
+		selected_y = null;
+		checkDisabled();
+	});
+
+	// Если нажимаем enter, сохраняем содержимое яйчейки, переносим выделение ниже
+	$(document).keypress(function(e) {
+		if (selected_cell == null) return;
+
+		if (e.keyCode == 13 && !e.ctrlKey) { // Enter
+			selected_y++;
+
+			if (table_height == selected_y) {
+				// Добавляем строку снизу т.к. не хватает места
+				addRow(selected_y - 1, 1);
+			}
+
+		} else if (e.keyCode == 13 && e.ctrlKey) { // Ctrl+Enter
+			selected_x++;
+
+			if (table_width == selected_x) {
+				// Добавляем столбец справа т.к. не хватает места
+				addColumn(selected_x - 1, 1);
+			}
+
+		} else {
+			return;
+		}
+
+		moveValueToCell(selected_cell);
+		selected_cell.css("box-shadow", "none");
+		selected_cell = $("#editable-table").find("tr").eq(selected_y).find("td").eq(selected_x);
+		focusInput(selected_cell);
+	});
+
+	// Выравнивание по левому краю
+	$("#align-left").click(function() {
+		setColumnAlignment(selected_x, "left");
+	});
+
+	// Выравнивание по центру
+	$("#align-center").click(function() {
+		setColumnAlignment(selected_x, "center");
+	});
+
+	// Выравнивание по правому краю
+	$("#align-right").click(function() {
+		setColumnAlignment(selected_x, "right");
+	});
+
+	// Удаление колонки
+	$("#delete-column").click(function() {
+		if (confirm("Точно удалить выделенную колонку?") == false) return;
+		removeColumn(selected_x);
+	});
+
+	// Удаление строки
+	$("#delete-row").click(function() {
+		if (confirm("Точно удалить выделенную строку?") == false) return;
+		removeRow(selected_y);
+	});
+
+	// Добавление строки сверху
+	$("#insert-row-top").click(function() {
+		if (selected_cell == null) return;
+		addRow(selected_y, -1);
+	});
+
+	// Добавление строки снизу
+	$("#insert-row-bottom").click(function() {
+		if (selected_cell == null) return;
+		addRow(selected_y, 1);
+	});
+
+	// Добавление столбца справа (Спасибо, https://stackoverflow.com/a/20239146)
+	$("#insert-col-right").click(function() {
+		if (selected_cell == null) return;
+		addColumn(selected_x, 1);
+	});
+
+	// Добавление столбца слева
+	$("#insert-col-left").click(function() {
+		if (selected_cell == null) return;
+		addColumn(selected_x, -1);
+	});
+
+	// Подсвечиваем колонку, к которой будет применён эффект
+	$(".align-control").mouseenter(function () {
+		if (selected_cell == null) return;
+		paintColumn(selected_x, "#C1B2FF");
+	});
+	$(".align-control").mouseleave(function () {
+		if (selected_cell == null) return;
+		paintColumn(selected_x, "");
+	});
+
+	$("#delete-column").mouseenter(function () {
+		paintColumn(selected_x, "#FFABA5");
+	});
+	$("#delete-column").mouseleave(function () {
+		paintColumn(selected_x, "");
+	});
+
+	$("#delete-row").mouseenter(function () {
+		paintRow(selected_y, "#FFABA5")
+	});
+
+	$("#delete-row").mouseleave(function () {
+		paintRow(selected_y, "");
+	});
+});
 
 // Считывает значения ширин столбцов таблицы и генерирует первую строку таблицы
 function getMarkupHead() {
-	let output = "@" + input_title.value;
+	let output = "@" + $("#table-title").val();
 
 	let col_count = table.rows[0].cells.length;
 
@@ -242,9 +374,4 @@ function getMarkupBody() {
 		output += "|\n";
 	}
 	return output;
-}
-
-// Копирует разметку
-function copyMarkup() {
-	navigator.clipboard.writeText(markup_pre.textContent).then(alert("Успешно скопировано"));
 }

@@ -63,6 +63,10 @@ button {
 	margin: 0 4px;
 }
 
+button:disabled {
+	background-color: gray !important;
+}
+
 .align-controls button {
 	background-color: #8668FF;
 }
@@ -104,24 +108,17 @@ button {
 }
 #markup {
 	border: 1px solid #404040;
+	overflow: hidden;
 }
+
 #link-copy {
 	color: #3232FF;
 }
-
-
-
-
-
 
 .page-container {
 	margin-top: 64px;
 	background: #404040;
 }
-
-
-
-
 
 .page {
 	background-position: 2cm 1cm;
