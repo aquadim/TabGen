@@ -123,6 +123,7 @@ function removeColumn(x) {
 	});
 	table_width--;
 	checkDisabled();
+	$("#edit-cell-content").val("");
 	updateMarkup(true, true);
 }
 
@@ -152,6 +153,7 @@ function removeRow(y) {
 	$("#editable-table").find("tr").eq(y).remove();
 	table_height--;
 	checkDisabled();
+	$("#edit-cell-content").val("");
 	updateMarkup(false, true);
 }
 
@@ -189,8 +191,6 @@ let markup_body = null; // Тело разметки
 
 // DOM элементы
 let table = document.getElementById("editable-table");
-let selected_column = $("td:nth-child(0)"); // Колонка таблицы, по которой кликнули
-let input_cell_content = $("#edit-cell-content"); // Поле ввода содержимого яйчейки
 
 $(function() {
 	checkDisabled();
