@@ -335,47 +335,42 @@ $(function() {
 function getMarkupHead() {
 	let output = "@" + $("#table-title").val();
 
-	let col_count = table.rows[0].cells.length;
-
-	let table_row = $(table.rows[1].cells);
-	for (let x = 0; x < col_count; x++) {
-		let column = $(table_row[x]);
-		let width = Math.round(column.width());
-		let align = column.css("text-align");
-		output += ":" + width + "_" + align;
-	}
+	$("#editable-table").find("tr").eq(0).find("td").each(function() {
+		let cell = $(this);
+		output += ":" + Math.round(cell.width()); + "_" + cell.css("text-align");
+	});
 
 	return output + "\n";
 }
 
 // Парсит табличные значения, переводит их в разметку для отчёта
 function getMarkupBody() {
-	// Подсчитываем количество столбцов и строк
-	let col_count = table.rows[0].cells.length;
-	let row_count = table.rows.length;
-
 	// Ищем самое максимальное количество символов в столбцах
-	let max_symbol_counts = new Array(col_count);
-	for (let x = 0; x < col_count; x++) max_symbol_counts[x] = 0;
+	let max_symbol_counts = new Array(table_width);
+	for (let x = 0; x < table_width; x++) max_symbol_counts[x] = 0;
 
-	for (let y = 0; y < row_count; y++) {
-		let table_row = table.rows[y].cells;
-		for (let x = 0; x < col_count; x++) {
-			if (table_row[x].textContent.length > max_symbol_counts[x]) {
-				max_symbol_counts[x] = table_row[x].textContent.length;
-			}
-		}
-	}
+	$("#editable-table").find("tr").each(function() {
+		// this это <tr>
+		$(this).find("td").each(function() {
+			// this это <td>
+			let cell = $(this);
+			let cell_index = cell.index();
+			max_symbol_counts[cell_index] = Math.max(max_symbol_counts[cell_index], cell.text().length);
+		});
+	});
 
 	// Составляем текст
 	let output = "";
-	for (let y = 0; y < row_count; y++) {
-		let table_row = table.rows[y].cells;
-		for (let x = 0; x < col_count; x++) {
-			let cell_content = table_row[x].textContent;
-			output += "| " + cell_content + " ".repeat(max_symbol_counts[x] - cell_content.length) + " ";
-		}
+	$("#editable-table").find("tr").each(function() {
+		// this это <tr>
+		$(this).find("td").each(function() {
+			// this это <td>
+			let cell = $(this);
+			let cell_index = cell.index();
+			output += "| " + cell.text() + " ".repeat(max_symbol_counts[cell_index] - cell.text().length) + " ";
+		});
 		output += "|\n";
-	}
+	});
+
 	return output;
 }
